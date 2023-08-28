@@ -1,5 +1,7 @@
 # PyGTKApps
 
+ChatGPT Generated code...
+
 for tvheadend m3u
 
 iptv2gst.py / iptv2mpv.py 
