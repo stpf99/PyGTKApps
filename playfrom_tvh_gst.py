@@ -20,7 +20,7 @@ class IPTVPlayer:
 
         self.play_button = Gtk.Button(label="Play")
         self.stop_button = Gtk.Button(label="Stop")
-        self.mute_button = Gtk.ToggleButton(label="Mute/Unmute")
+        self.mute_button = Gtk.ToggleButton(label="Mute")
         self.filechooser_button = Gtk.Button(label="Select Playlist")
         self.playlist_store = Gtk.ListStore(str, str)
         self.playlist_combo = Gtk.ComboBox.new_with_model_and_entry(self.playlist_store)
@@ -56,6 +56,8 @@ class IPTVPlayer:
         self.app_start_time = time.time()
         self.current_channel = ""
 
+        self.mute_button = Gtk.ToggleButton(label="Mute")
+        self.mute_button.connect("clicked", self.on_mute_button_clicked)
         self.config_file_path = os.path.join(self.app_dir, "config.ini")
         self.config = configparser.ConfigParser()
         if os.path.exists(self.config_file_path):
@@ -86,14 +88,23 @@ class IPTVPlayer:
     def on_play_button_clicked(self, widget):
         active_iter = self.playlist_combo.get_active_iter()
         if active_iter is not None:
-            self.player.set_state(Gst.State.NULL)
-            uri = self.playlist_store[active_iter][1]
-            self.player.set_property("uri", uri)
-            self.player.set_state(Gst.State.PLAYING)
-            self.stream_start_time = time.time()
-            self.current_channel = self.playlist_store[active_iter][0]
-            self.status_label.set_label(f"Playing: {self.current_channel}")
-            self.show_now_playing_notification()
+            current_state = self.player.get_state(0)[1]
+
+            if current_state == Gst.State.PAUSED:
+                self.player.set_state(Gst.State.PLAYING)
+                self.status_label.set_label(f"Playing: {self.current_channel}")
+            elif current_state == Gst.State.PLAYING:
+                self.player.set_state(Gst.State.PAUSED)
+                self.status_label.set_label("Paused")
+            else:
+                self.player.set_state(Gst.State.NULL)
+                uri = self.playlist_store[active_iter][1]
+                self.player.set_property("uri", uri)
+                self.player.set_state(Gst.State.PLAYING)
+                self.stream_start_time = time.time()
+                self.current_channel = self.playlist_store[active_iter][0]
+                self.status_label.set_label(f"Playing: {self.current_channel}")
+                self.show_now_playing_notification()
 
     def on_stop_button_clicked(self, widget):
         self.player.set_state(Gst.State.NULL)
@@ -101,7 +112,11 @@ class IPTVPlayer:
         self.status_label.set_label("Stopped")
 
     def on_mute_button_clicked(self, widget):
-        self.player.set_property("mute", widget.get_active())
+        new_mute_state = widget.get_active()
+        self.player.set_property("mute", new_mute_state)
+
+    def get_mute_button_label(self, muted=False):
+        return "Unmute" if muted else "Mute"
 
     def on_bus_message(self, bus, message):
         if message.type == Gst.MessageType.EOS:
