@@ -5,7 +5,6 @@ from gi.repository import Gtk, Gst, GObject, GLib
 import notify2
 import time
 import os
-import shutil
 import configparser
 
 class IPTVPlayer:
