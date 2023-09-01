@@ -8,7 +8,7 @@ class IPTVPlayer:
     def __init__(self):
         self.window = Gtk.Window(title="IPTV Player")
         self.window.connect("delete-event", Gtk.main_quit)
-        self.window.set_default_size(800, 600)
+        self.window.set_default_size(100, 50)
 
         self.play_button = Gtk.Button(label="Play")
         self.stop_button = Gtk.Button(label="Stop")
